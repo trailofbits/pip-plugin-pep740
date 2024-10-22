@@ -53,7 +53,13 @@ class TestPlugin:
                 text=provenance_file.read_text(),
             )
             pip_plugin_pep740.pre_download(
-                url="url",
+                url="https://files.pythonhosted.org/some_path",
+                filename=filename,
+                digest=digest,
+            )
+            # TestPyPI URLs should also work
+            pip_plugin_pep740.pre_download(
+                url="https://test-files.pythonhosted.org/some_path",
                 filename=filename,
                 digest=digest,
             )
@@ -61,7 +67,7 @@ class TestPlugin:
     def test_pre_download_invalid_filename(self) -> None:
         assert (
             pip_plugin_pep740.pre_download(
-                url="url",
+                url="https://files.pythonhosted.org/some_path",
                 filename="not_a_dist.docx",
                 digest="digest",
             )
@@ -76,7 +82,7 @@ class TestPlugin:
             )
             assert (
                 pip_plugin_pep740.pre_download(
-                    url="url",
+                    url="https://files.pythonhosted.org/some_path",
                     filename=DIST_FILE_1.name,
                     digest=DIST_DIGEST_1,
                 )
@@ -92,12 +98,22 @@ class TestPlugin:
             with pytest.raises(ValueError, match="403 Client Error"):
                 assert (
                     pip_plugin_pep740.pre_download(
-                        url="url",
+                        url="https://files.pythonhosted.org/some_path",
                         filename=DIST_FILE_1.name,
                         digest=DIST_DIGEST_1,
                     )
                     is None
                 )
+
+    def test_pre_download_not_pypi_url(self) -> None:
+        assert (
+            pip_plugin_pep740.pre_download(
+                url="https://notpypi.org",
+                filename=DIST_FILE_1.name,
+                digest=DIST_DIGEST_1,
+            )
+            is None
+        )
 
     def test_pre_download_provenance_timeout(self) -> None:
         with requests_mock.Mocker(real_http=True) as m:
@@ -108,7 +124,7 @@ class TestPlugin:
             with pytest.raises(ValueError, match="Error downloading provenance file"):
                 assert (
                     pip_plugin_pep740.pre_download(
-                        url="url",
+                        url="https://files.pythonhosted.org/some_path",
                         filename=DIST_FILE_1.name,
                         digest=DIST_DIGEST_1,
                     )
@@ -126,7 +142,7 @@ class TestPlugin:
                 match="subject does not match distribution name",
             ):
                 pip_plugin_pep740.pre_download(
-                    url="url",
+                    url="https://files.pythonhosted.org/some_path",
                     filename=DIST_FILE_1.name,
                     digest=DIST_DIGEST_1,
                 )
@@ -142,7 +158,7 @@ class TestPlugin:
                 match="Invalid provenance JSON",
             ):
                 pip_plugin_pep740.pre_download(
-                    url="url",
+                    url="https://files.pythonhosted.org/some_path",
                     filename=DIST_FILE_1.name,
                     digest=DIST_DIGEST_1,
                 )
@@ -160,7 +176,7 @@ class TestPlugin:
                 match="Invalid provenance: 1 validation error for Provenance",
             ):
                 pip_plugin_pep740.pre_download(
-                    url="url",
+                    url="https://files.pythonhosted.org/some_path",
                     filename=DIST_FILE_1.name,
                     digest=DIST_DIGEST_1,
                 )

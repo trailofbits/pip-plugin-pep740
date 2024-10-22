@@ -6,6 +6,7 @@ from json import JSONDecodeError
 from typing import TYPE_CHECKING, Literal
 
 import requests
+import rfc3986
 from packaging.utils import parse_sdist_filename, parse_wheel_filename
 from pydantic import ValidationError
 from pypi_attestations import (
@@ -21,8 +22,17 @@ if TYPE_CHECKING:
 PluginType = Literal["dist-inspector"]
 
 
-def _get_provenance(filename: str) -> Provenance | None:
+def _get_provenance(filename: str, url: str) -> Provenance | None:
     """Download the provenance for a given distribution."""
+    url_authority = rfc3986.api.uri_reference(url).authority
+    # Only PyPI and TestPyPI currently support PEP-740
+    if url_authority == "files.pythonhosted.org":
+        index_host = "pypi.org"
+    elif url_authority == "test-files.pythonhosted.org":
+        index_host = "test.pypi.org"
+    else:
+        return None
+
     if filename.endswith(".tar.gz"):
         name, version = parse_sdist_filename(filename)
     elif filename.endswith(".whl"):
@@ -31,19 +41,19 @@ def _get_provenance(filename: str) -> Provenance | None:
         # Unexpected file, ignore
         return None
 
-    # This currently only works when installing packages from PyPI
-    # In order to make it general, we need to get the provenance URL from the index API instead
-    # of hardcoding the URL. This can be done once
-    # https://github.com/pypi/warehouse/pull/16801 is merged
     provenance_url = (
         builder.URIBuilder()
         .add_scheme("https")
-        .add_host("pypi.org")
+        .add_host(index_host)
         .add_path(f"integrity/{name}/{version}/{filename}/provenance")
         .geturl()
     )
     try:
-        r = requests.get(url=provenance_url, params={"Accept": "application/json"}, timeout=5)
+        r = requests.get(
+            url=provenance_url,
+            params={"Accept": "application/vnd.pypi.integrity.v1+json"},
+            timeout=5,
+        )
         r.raise_for_status()
     except requests.HTTPError as e:
         # If there is no provenance available, continue
@@ -69,14 +79,14 @@ def plugin_type() -> PluginType:
     return "dist-inspector"
 
 
-def pre_download(url: str, filename: str, digest: str) -> None:  # noqa: ARG001
+def pre_download(url: str, filename: str, digest: str) -> None:
     """Inspect the file about to be downloaded by pip.
 
     This hook is called right before pip downloads a distribution
     file. It doesn't return anything, and it can only raise `ValueError`
     to signal to pip that the operation should be aborted.
     """
-    provenance = _get_provenance(filename)
+    provenance = _get_provenance(filename=filename, url=url)
     if not provenance:
         return
     distribution = Distribution(name=filename, digest=digest)
