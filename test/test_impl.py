@@ -6,8 +6,7 @@ from pathlib import Path
 import pytest
 import requests
 import requests_mock
-from pypi_attestations import AttestationBundle, Distribution, GitLabPublisher
-from sigstore.verify.policy import AllOf, OIDCIssuerV2, OIDCSourceRepositoryURI
+from pypi_attestations import Distribution
 
 import pip_plugin_pep740
 
@@ -165,19 +164,6 @@ class TestPlugin:
                     filename=DIST_FILE_1.name,
                     digest=DIST_DIGEST_1,
                 )
-
-    def test_get_verification_policy_gitlab(self) -> None:
-        bundle = AttestationBundle(
-            publisher=GitLabPublisher(repository="namespace/pkg"), attestations=[]
-        )
-        policy = pip_plugin_pep740._impl._get_verification_policy(bundle)  # noqa: SLF001
-        assert isinstance(policy, AllOf)
-        issuer_policy = policy._children[0]  # noqa: SLF001
-        assert isinstance(issuer_policy, OIDCIssuerV2)
-        assert issuer_policy._value == "https://gitlab.com"  # noqa: SLF001
-        repository_policy = policy._children[1]  # noqa: SLF001
-        assert isinstance(repository_policy, OIDCSourceRepositoryURI)
-        assert repository_policy._value == "https://gitlab.com/namespace/pkg"  # noqa: SLF001
 
     def test_pre_extract(self) -> None:
         assert pip_plugin_pep740.pre_extract(dist=Path("filename")) is None

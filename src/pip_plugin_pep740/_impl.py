@@ -9,15 +9,11 @@ import requests
 from packaging.utils import parse_sdist_filename, parse_wheel_filename
 from pydantic import ValidationError
 from pypi_attestations import (
-    AttestationBundle,
     AttestationError,
     Distribution,
-    GitHubPublisher,
-    GitLabPublisher,
     Provenance,
 )
 from rfc3986 import builder
-from sigstore.verify import Verifier, policy
 
 if TYPE_CHECKING:
     from pathlib import Path  # pragma: no cover
@@ -68,24 +64,6 @@ def _get_provenance(filename: str) -> Provenance | None:
         raise ValueError(msg) from e
 
 
-def _get_verification_policy(bundle: AttestationBundle) -> policy.VerificationPolicy:
-    """Construct a verification policy from the Trusted Publisher in the bundle."""
-    publisher = bundle.publisher
-    if isinstance(publisher, GitHubPublisher):
-        issuer = "https://token.actions.githubusercontent.com"
-        repository = f"https://github.com/{publisher.repository}"
-    elif isinstance(publisher, GitLabPublisher):
-        issuer = "https://gitlab.com"
-        repository = f"https://gitlab.com/{publisher.repository}"
-
-    return policy.AllOf(
-        [
-            policy.OIDCIssuerV2(issuer),
-            policy.OIDCSourceRepositoryURI(repository),
-        ]
-    )
-
-
 def plugin_type() -> PluginType:
     """Return the plugin type."""
     return "dist-inspector"
@@ -102,17 +80,13 @@ def pre_download(url: str, filename: str, digest: str) -> None:  # noqa: ARG001
     if not provenance:
         return
     distribution = Distribution(name=filename, digest=digest)
-    verifier = Verifier.production()
-    for bundle in provenance.attestation_bundles:
-        # Each bundle has their own trusted publisher information, so each
-        # needs its own verification policy.
-        policy = _get_verification_policy(bundle)
-        try:
+    try:
+        for bundle in provenance.attestation_bundles:
             for a in bundle.attestations:
-                a.verify(verifier=verifier, policy=policy, dist=distribution)
-        except AttestationError as e:
-            msg = f"Provenance failed verification: {e}"
-            raise ValueError(msg) from e
+                a.verify(bundle.publisher, dist=distribution)
+    except AttestationError as e:
+        msg = f"Provenance failed verification: {e}"
+        raise ValueError(msg) from e
     return
 
 
