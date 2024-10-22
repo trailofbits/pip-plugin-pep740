@@ -13,8 +13,7 @@ classifiers = [
 ]
 dependencies = [
     "packaging",
-    # Change to >=0.0.13 once the PR is merged
-    "pypi-attestations @ git+https://github.com/trailofbits/pypi-attestations@refs/pull/64/head",
+    "pypi-attestations>=0.0.13",
     "rfc3986",
     "sigstore~=3.3",
 ]
