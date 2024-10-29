@@ -31,3 +31,44 @@ jobs:
 
       - name: test
         run: make test INSTALL_EXTRA=test
+
+  integration-test:
+    strategy:
+      matrix:
+        python:
+          - "3.9"
+          - "3.10"
+          - "3.11"
+          - "3.12"
+          - "3.13"
+        pip:
+          - "git+https://github.com/pypa/pip.git@main"
+          # Branch adding the plugin architecture to pip
+          # Remove once it's merged
+          - "git+https://github.com/trail-of-forks/pip.git@add-plugin-support"
+
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+
+      - name: Create virtual env
+        run: uv venv --python ${{ matrix.python }}
+
+      - name: Install pip
+        run: uv pip install ${{ matrix.pip }}
+
+      - name: Install plugin
+        run: .venv/bin/pip install .
+
+      - name: Install package with provenance available
+        run: .venv/bin/pip install abi3info==2024.10.26
+
+      - name: Install package without provenance available
+        run: .venv/bin/pip install abi3info==2023.8.25
+
