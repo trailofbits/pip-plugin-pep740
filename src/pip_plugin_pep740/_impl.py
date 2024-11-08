@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from json import JSONDecodeError
-from typing import TYPE_CHECKING, Literal
 
 import requests
 import rfc3986
@@ -15,11 +14,6 @@ from pypi_attestations import (
     Provenance,
 )
 from rfc3986 import builder
-
-if TYPE_CHECKING:
-    from pathlib import Path  # pragma: no cover
-
-PluginType = Literal["dist-inspector"]
 
 
 def _get_provenance_url(filename: str, index_host: str) -> str | None:
@@ -101,9 +95,9 @@ def _get_provenance(filename: str, url: str) -> Provenance | None:
         raise ValueError(msg) from e
 
 
-def plugin_type() -> PluginType:
-    """Return the plugin type."""
-    return "dist-inspector"
+def provided_hooks() -> list[str]:
+    """Return the hooks we want to register."""
+    return ["pre_download"]
 
 
 def pre_download(url: str, filename: str, digest: str) -> None:
@@ -124,9 +118,4 @@ def pre_download(url: str, filename: str, digest: str) -> None:
     except AttestationError as e:
         msg = f"Provenance failed verification: {e}"
         raise ValueError(msg) from e
-    return
-
-
-def pre_extract(dist: Path) -> None:  # noqa: ARG001
-    """Check before extraction."""
     return

@@ -32,7 +32,7 @@ with DIST_FILE_3.open("rb") as f:
 
 class TestPlugin:
     def test_plugin_type(self) -> None:
-        assert pip_plugin_pep740.plugin_type() == "dist-inspector"
+        assert pip_plugin_pep740.provided_hooks() == ["pre_download"]
 
     @pytest.mark.parametrize(
         ("filename", "provenance_file", "digest"),
@@ -254,6 +254,3 @@ class TestPlugin:
                     filename=DIST_FILE_1.name,
                     digest=DIST_DIGEST_1,
                 )
-
-    def test_pre_extract(self) -> None:
-        assert pip_plugin_pep740.pre_extract(dist=Path("filename")) is None

@@ -2,6 +2,6 @@
 
 __version__ = "0.0.1"
 
-from ._impl import plugin_type, pre_download, pre_extract
+from ._impl import pre_download, provided_hooks
 
-__all__ = ["plugin_type", "pre_extract", "pre_download"]
+__all__ = ["provided_hooks", "pre_download"]
