@@ -23,7 +23,7 @@ requires-python = ">=3.9"
 version = { attr = "pip_plugin_pep740.__version__" }
 
 [project.entry-points."pip.plugins"]
-pep740-distinspector = "pip_plugin_pep740"
+pip-plugin-pep740 = "pip_plugin_pep740"
 
 [project.optional-dependencies]
 doc = ["pdoc"]
