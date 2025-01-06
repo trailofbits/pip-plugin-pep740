@@ -4,4 +4,4 @@ __version__ = "0.0.1"
 
 from ._impl import pre_download, provided_hooks
 
-__all__ = ["provided_hooks", "pre_download"]
+__all__ = ["pre_download", "provided_hooks"]
