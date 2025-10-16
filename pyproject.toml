@@ -13,7 +13,7 @@ classifiers = [
 ]
 dependencies = [
     "packaging",
-    "pypi-attestations>=0.0.13",
+    "pypi-attestations>=0.0.28",
     "rfc3986",
     "sigstore~=4.1",
 ]
