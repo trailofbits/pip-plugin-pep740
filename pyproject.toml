@@ -17,7 +17,7 @@ dependencies = [
     "rfc3986",
     "sigstore~=4.1",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 
 [tool.setuptools.dynamic]
 version = { attr = "pip_plugin_pep740.__version__" }
