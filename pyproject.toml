@@ -31,7 +31,7 @@ test = ["pytest", "pytest-cov", "pretend", "coverage[toml]", "requests-mock"]
 lint = [
     # NOTE: ruff is under active development, so we pin conservatively here
     # and let Dependabot periodically perform this update.
-    "ruff ~= 0.15.10",
+    "ruff >= 0.15.10,< 0.17.0",
     "mypy >= 1.19.1",
     "types-html5lib",
     "types-requests",
